@@ -32,7 +32,7 @@ const PokeTarjeta = (params) => {
       <Card className={"shadow border-4 border-warning "+loadClass}>
         <CardImg src="/img/loading1.webp" height="200" className="p-3"></CardImg>
       </Card>
-      <Card className={"shadow border-4 border-warning "+ cardClass}>
+      <Card className={"animate__animated animate__zoomIn card-hover shadow border-4 border-warning"+ cardClass}>
         <CardImg src={imagen} height="150" className="p-2" />
         <CardBody className="text-center">
           <Badge pill color="danger"># {pokemon.id}</Badge>

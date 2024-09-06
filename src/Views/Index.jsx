@@ -59,7 +59,7 @@ const Index = () => {
 
   return (
     <Container className="shadow bg-danger mt-3">
-      <Row>
+      <Row className="animate__animated animate__backInDown">
         <Col>
           <InputGroup className="mt-3 mb-3">
           <InputGroupText><i className="fa-solid fa-search"></i></InputGroupText>
@@ -72,6 +72,8 @@ const Index = () => {
         {listado.map((pok,i)=>(
           <PokeTarjeta poke={pok} key={i}/>
         ))}
+        {listado.length == 0 ?<Col className="text-center fs-2 mb-3">No hay coincidencias</Col>
+        :""}
         <PaginationControl last={true} limit={limit} total={total} 
         page={offset} changePage={page=>goPage(page)}/>
       </Row>

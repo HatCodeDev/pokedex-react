@@ -1,4 +1,12 @@
 .fondo{
     background-image: url(/img/fondoPokemon.jpeg);
-    
+    background-size: auto;
+}
+
+.card-hover{
+    transition: all .25s ease;
+}
+
+.card-hover:hover{
+    transform: translateY(-8px) scale(1.01);
 }

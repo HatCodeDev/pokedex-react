@@ -12,11 +12,15 @@ const Detalle = () => {
   const [descripcion,setDescripcion] = useState([]);
   const [imagen,setImagen] = useState([]);
   const [tipos,setTipos] = useState([]);
+  const [habilidades,setHabilidades] = useState([]);
+  const [estadisticas,setEstadisticas] = useState([]);
+  const [evoluciones,setEvoluciones] = useState([]);
+  const [listaEvoluciones,setListaEvoluciones] = useState([]);
   const [cardClass,setCardClass] = useState('d-none');
   const [loadClass,setLoadClass] = useState('');
   useEffect(() =>{
     getPokemon()
-  },[])
+  },[id])
   const getPokemon = async()=>{
     const liga = 'https://pokeapi.co/api/v2/pokemon/'+id;
     axios.get(liga).then(async(response)=>{
@@ -27,9 +31,39 @@ const Detalle = () => {
       }else{
         setImagen(respuesta.sprites.other['official-artwork'].front_default);
       }
+      await getTipos(respuesta.types);
+      await getHabilidades(respuesta.abilities);
+      await getEstadisticas(respuesta.stats);
       await getEspecie(respuesta.species.name);
       setCardClass('');
       setLoadClass('d-none')
+    })
+  }
+  const getEstadisticas = async(es)=>{
+    let listaEs = [];
+    es.forEach((h) =>{
+      axios.get(h.stat.url).then(async(response)=>{
+        listaEs.push({'nombre':response.data.names[5].name,'valor':h.base_stat});
+        setEstadisticas(listaEs);
+      })
+    })
+  }
+  const getHabilidades = async(hab)=>{
+    let listaHab = [];
+    hab.forEach((h) =>{
+      axios.get(h.ability.url).then(async(response)=>{
+        listaHab.push(response.data.names[5].name);
+        setHabilidades(listaHab);
+      })
+    })
+  }
+  const getTipos = async(tip)=>{
+    let listaTipos = [];
+    tip.forEach((t) =>{
+      axios.get(t.type.url).then(async(response)=>{
+        listaTipos.push(response.data.names[5].name);
+        setTipos(listaTipos);
+      })
     })
   }
   const getEspecie = async(esp)=>{
@@ -40,15 +74,51 @@ const Detalle = () => {
       if (respuesta.habitat != null) {
         await getHabitat(respuesta.habitat.url)
       }
+      await getDescripcion(respuesta.flavor_text_entries);
+      await getEvoluciones(respuesta.evolution_chain.url);
     })
   }
-  const getHabitat = async(esp)=>{
+  const getEvoluciones = async(ev)=>{
+    axios.get(ev).then(async(response)=>{
+      const respuesta = response.data;
+      let lista = respuesta.chain.species.url.replace('-species','')
+      lista += procesaEvoluciones(respuesta.chain);
+      setEvoluciones(lista);
+      let apoyo = lista.split(' ');
+      let list = [];
+      apoyo.forEach(ap =>{
+        if (ap != '') {
+          list.push({url:ap})
+        }
+      })
+      setListaEvoluciones(list)
+    })
+  }
+  const procesaEvoluciones = (info)=>{
+    let res = ' ';
+    if (info.evolves_to.length > 0) {
+      res += info.evolves_to[0].species.url.replace('-species','')
+      return res+' '+procesaEvoluciones(info.evolves_to[0]);
+    }else{
+      return res;
+    }
+  }
+  const getHabitat = async(hab)=>{
     axios.get(hab).then(async(response)=>{
       setHabitat(response.data.names[1].name)
     })
   }
-  const getDescripcion = async(esp)=>{
-
+  const getDescripcion = async(desc)=>{
+    let texto = '';
+    desc.forEach((d)=>{
+      if (d.language.name == 'es') {
+        texto = d.flavor_text;
+      }
+      if (texto == '' && desc.length >0) {
+        texto = desc[0].flavor_text;
+      }
+    })
+    setDescripcion(texto);
   }
   return (
     <Container className="bg-danger mt-3">
@@ -76,12 +146,45 @@ const Detalle = () => {
                 </CardText>
                 <CardText className="fs-5">
                   Tipo:
+                  {tipos.map((tip,i)=>(
+                    <Badge pill className="me-1" color="danger" key={i}>
+                      {tip}
+                    </Badge>
+                  ))}
                 </CardText>
                 <CardText className="fs-5">
+                  Habilidades:  
+                  {habilidades.map((hab,i)=>(
+                    <Badge pill className="me-1" color="dark" key={i}>
+                      {hab}
+                    </Badge>
+                  ))}
+                </CardText>
+                <CardText className="fs-5 text-capitalize">
                   Habitat: <b>{habitat}</b>
                 </CardText>
               </Col>
-              <Col md="6"></Col>
+              <Col md="6">
+              <img src={imagen} className="img-fluid animate__animated animate__bounceInRight"></img>
+              </Col>
+              <Col md="12 mt-3">
+                  <CardText className="fs-4 text-center"><b>Estadísticas</b></CardText>
+              </Col>
+              {estadisticas.map((es,i) =>(
+                <Row key={i}>
+                  <Col xs="6" md='3'><b>{es.nombre}</b></Col>
+                  <Col xs="6" md='9'>
+                    <Progress className="my-2" value={es.valor}>{es.valor}</Progress>
+                  </Col>
+                </Row>
+              ))}
+              <Col md="12 mt-3">
+                <CardText className="fs-4 text-center"><b>Cadena de evolución</b></CardText>   
+              </Col>
+              {listaEvoluciones.map( (pok,i)=>(
+                <PokeTarjeta poke={pok} key={i}/>
+              ))}
+              
             </Row>
           </CardBody>
         </Card>
